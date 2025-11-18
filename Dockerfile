@@ -1,37 +1,47 @@
-# Etapa 1 — PHP com extensões
-FROM php:8.2-fpm
+# --- STAGE 1: BUILD & DEPENDENCIES ---
+FROM composer:2.7 AS vendor
 
-# Instalar dependências de sistema
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    sqlite3 \
-    libsqlite3-dev
-
-# Extensões PHP
-RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring zip gd
-
-# Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Copiar código
-WORKDIR /var/www/html
-COPY . .
-
-# Instalar dependências Laravel
+WORKDIR /app
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissões storage e cache
-RUN chmod -R 777 storage bootstrap/cache
+# --- STAGE 2: PRODUCTION (Nginx + PHP-FPM) ---
+FROM php:8.2-fpm-alpine AS laravel
 
-# Porta obrigatória para Render
-EXPOSE 10000
+# Instalação de pacotes de sistema (Git, Nginx, PostgreSQL, libs)
+RUN apk add --no-cache \
+    nginx \
+    curl \
+    git \
+    libzip-dev \
+    libpng-dev \
+    libxml2-dev \
+    oniguruma-dev \
+    postgresql-dev \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Instala extensões PHP (pdo_pgsql para Supabase)
+RUN docker-php-ext-install pdo pdo_pgsql mbstring zip gd opcache
+
+# Configuração do Nginx e FPM
+COPY .docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY .docker/fpm/www.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+
+# Copiar código e vendor do estágio anterior
+WORKDIR /var/www/html
+COPY . .
+COPY --from=vendor /app/vendor /var/www/html/vendor
+
+# Permissões: O Render/Nginx/FPM roda como www-data
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
+
+# Copia e dá permissão ao script de entrada
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+EXPOSE 80
 
 # Comando de inicialização
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+CMD ["/usr/local/bin/start.sh"]
