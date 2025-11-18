@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: backend-laravel
+    env: php
+    plan: free
+    region: oregon
+
+    buildCommand: "composer install --no-dev --optimize-autoloader"
+    startCommand: "php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 10000"
+
+    rootDir: "/"
+    buildFilter:
+      paths:
+        - "app/**"
+        - "routes/**"
+        - "composer.json"
+        - "composer.lock"
+        - "render.yaml"
+
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: STORAGE_DIR
+        value: /var/storage
