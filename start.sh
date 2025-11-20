@@ -1,6 +1,12 @@
 #!/usr/bin/env sh
 set -e
 
+# 0. Garante que as pastas de cache existam (FIX para erro 'View path not found')
+mkdir -p storage/framework/cache
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+
 # 1. Cache para performance
 echo "Caching configuration..."
 php artisan config:cache
