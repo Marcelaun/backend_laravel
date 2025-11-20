@@ -1,48 +1,40 @@
-# --- STAGE 1: BUILD & DEPENDENCIES ---
+# --- STAGE 1: BUILD ---
 FROM composer:2.7 AS vendor
-
 WORKDIR /app
 COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --optimize-autoloader --prefer-dist
 COPY . .
-RUN composer install --no-dev --optimize-autoloader
+RUN composer dump-autoload --optimize
 
-# --- STAGE 2: PRODUCTION (Nginx + PHP-FPM) ---
-FROM php:8.2-fpm-alpine AS laravel
+# --- STAGE 2: PRODUCTION ---
+# Usamos a imagem CLI, que é mais leve e feita para rodar comandos como 'artisan serve'
+FROM php:8.2-cli-alpine
 
-# Instalação de pacotes de sistema (Git, Nginx, PostgreSQL, libs)
+# Instala pacotes do sistema necessários para o Laravel e PostgreSQL
 RUN apk add --no-cache \
-    nginx \
-    curl \
-    git \
     libzip-dev \
     libpng-dev \
     libxml2-dev \
-    oniguruma-dev \
     postgresql-dev \
-    tzdata \
-    && rm -rf /var/cache/apk/*
+    oniguruma-dev
 
-# Instala extensões PHP (pdo_pgsql para Supabase)
-RUN docker-php-ext-install pdo pdo_pgsql mbstring zip gd opcache
+# Instala extensões PHP
+RUN docker-php-ext-install pdo_pgsql mbstring zip gd opcache
 
-# Configuração do Nginx e FPM
-COPY .docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY .docker/fpm/www.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-
-# Copiar código e vendor do estágio anterior
+# Configura diretório de trabalho
 WORKDIR /var/www/html
-COPY . .
-COPY --from=vendor /app/vendor /var/www/html/vendor
 
-# Permissões: O Render/Nginx/FPM roda como www-data
+# Copia o código do estágio de build
+COPY --from=vendor /app /var/www/html
+
+# Permissões
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Copia e dá permissão ao script de entrada
+# Copia o script de inicialização
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 EXPOSE 80
 
-# Comando de inicialização
 CMD ["/usr/local/bin/start.sh"]
