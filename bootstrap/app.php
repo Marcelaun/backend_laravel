@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'api/login-token', // <--- A rota que estamos usando para logar
-            // 'api/*',           // Opcional: Se quiser liberar a API toda (mais radical, mas resolve)
+            'api/*',           // Opcional: Se quiser liberar a API toda (mais radical, mas resolve)
         ]);
 
         // (Seu middleware 'admin' que criamos antes pode já estar aqui,
