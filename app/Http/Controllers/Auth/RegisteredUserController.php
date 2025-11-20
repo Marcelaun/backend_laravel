@@ -36,7 +36,8 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'professional', // <-- DEFINIMOS A ROLE
+            'role' => 'professional',
+            'status' => 'pending',
         ]);
 
         // 4. CRIAMOS O PERFIL PROFESSIONAL E LIGAMOS AO USUÁRIO

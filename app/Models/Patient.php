@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany; // <-- Importe o HasMany
 
 class Patient extends Model
 {
@@ -12,7 +13,6 @@ class Patient extends Model
 
     /**
      * A "lista de permissão" de campos que podem ser salvos.
-     * ESTA É A CORREÇÃO DO SEU ERRO 500.
      */
     protected $fillable = [
         'created_by_professional_id',
@@ -30,10 +30,35 @@ class Patient extends Model
     ];
 
     /**
+     * Conversão automática de tipos.
+     * Isso garante que 'birth_date' seja tratado como data, não texto.
+     */
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
+    /**
      * Relação: Um "Patient" PERTENCE A um "User" (o profissional que o criou).
      */
     public function professional(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_professional_id');
+    }
+
+    /**
+     * Relação: Um "Patient" TEM MUITAS "Analyses" (Histórico completo).
+     * (Vamos usar isso na tela de Detalhes do Paciente)
+     */
+    public function analyses(): HasMany
+    {
+        return $this->hasMany(Analysis::class);
+    }
+
+    /**
+     * Relação: Pega apenas a ÚLTIMA análise (Para a lista rápida).
+     */
+    public function latestAnalysis()
+    {
+        return $this->hasOne(Analysis::class)->latestOfMany();
     }
 }

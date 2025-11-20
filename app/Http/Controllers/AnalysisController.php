@@ -16,7 +16,7 @@ class AnalysisController extends Controller
      * O endereço do seu serviço de IA em Python.
      * (Usamos 127.0.0.1 em vez de 'localhost' para evitar problemas de DNS)
      */
-    private $pythonApiUrl = 'http://127.0.0.1:8000/predict_batch';
+    private $pythonApiUrl = 'https://MarceloLask-visus-ai-api.hf.space/predict_batch';
 
     /**
      * Recebe o formulário de "Nova Análise" do React, envia para a IA,
@@ -231,7 +231,7 @@ if (isset($aiData['results']) && is_array($aiData['results'])) {
         $analyses = Analysis::with('patient')
                             ->where('professional_id', $professionalId)
                             ->latest() // Ordena das mais novas para as mais antigas
-                            ->get();
+                            ->paginate(10);
 
         // 3. Retorna a lista de análises (com os dados do paciente "anexados")
         return response()->json($analyses);
@@ -288,5 +288,153 @@ if (isset($aiData['results']) && is_array($aiData['results'])) {
         $fileName = 'laudo_' . $analysis->patient->nome . '_' . $analysis->id . '.pdf';
 
         return $pdf->download($fileName);
+    }
+
+   public function showForPatient(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|integer',
+            'cpf' => 'required|string',
+            'analysis_id' => 'required|integer' // <-- Agora exigimos o ID do exame
+        ]);
+
+        $analysis = Analysis::with(['patient', 'images', 'professional'])
+                            ->where('id', $request->analysis_id) // Filtra pelo ID
+                            ->where('patient_id', $request->patient_id)
+                            ->whereHas('patient', function($q) use ($request) {
+                                $q->where('cpf', $request->cpf);
+                            })
+                            ->first();
+
+        if (!$analysis) {
+            return response()->json(['error' => 'Análise não encontrada ou acesso negado.'], 404);
+        }
+
+        return response()->json($analysis);
+    }
+
+    /**
+     * Lista o histórico de exames de um paciente (Área do Paciente).
+     */
+    public function historyForPatient(Request $request)
+    {
+        // Valida as "credenciais" do paciente
+        $request->validate([
+            'patient_id' => 'required|integer|exists:patients,id',
+            'cpf' => 'required|string'
+        ]);
+
+        // Busca todas as análises deste paciente
+        // Validando que o CPF bate com o registro do paciente
+        $analyses = Analysis::select('id', 'exam_date', 'ai_summary_diagnosis', 'status', 'professional_id')
+                            ->with('professional:id,name') // Traz só o nome do médico
+                            ->where('patient_id', $request->patient_id)
+                            ->whereHas('patient', function($q) use ($request) {
+                                $q->where('cpf', $request->cpf);
+                            })
+                            ->latest('exam_date') // Do mais recente para o mais antigo
+                            ->get();
+
+        return response()->json($analyses);
+    }
+
+    /**
+     * Gera o PDF para a área do paciente (Validação por CPF).
+     */
+    /**
+     * Gera o PDF para a ÁREA DO PACIENTE.
+     */
+    public function downloadLaudoForPatient(Request $request)
+    {
+        // 1. Validação de Segurança
+        $request->validate([
+            'patient_id' => 'required|integer',
+            'cpf' => 'required|string',
+            'analysis_id' => 'required|integer'
+        ]);
+
+        // 2. Busca a análise
+        $analysis = Analysis::with(['patient', 'professional', 'images'])
+                            ->where('id', $request->analysis_id)
+                            ->where('patient_id', $request->patient_id)
+                            ->whereHas('patient', function($query) use ($request) {
+                                $query->where('cpf', $request->cpf);
+                            })
+                            ->first();
+
+        if (!$analysis) {
+            return response()->json(['error' => 'Acesso negado ou laudo não encontrado.'], 403);
+        }
+
+        // 3. PROCESSAMENTO DE IMAGENS (Usando o padrão image_base64)
+        foreach ($analysis->images as $image) {
+            try {
+                $imageContent = Storage::disk('s3')->get($image->file_path);
+                // AQUI ESTÁ A PADRONIZAÇÃO: image_base64
+                $image->image_base64 = 'data:image/png;base64,' . base64_encode($imageContent);
+            } catch (\Exception $e) {
+                $image->image_base64 = null;
+                \Log::error("Erro imagem PDF Paciente: " . $e->getMessage());
+            }
+        }
+
+        // 4. Carrega a MESMA view
+        $pdf = Pdf::loadView('laudos.template', ['analysis' => $analysis]);
+
+        $cleanName = str_replace(' ', '_', $analysis->patient->nome);
+        $fileName = 'laudo_' . $cleanName . '.pdf';
+
+        return $pdf->download($fileName);
+    }
+
+    public function update(Request $request, Analysis $analysis)
+    {
+        // 1. Autorização: Só o dono da análise pode editar
+        if ($analysis->professional_id !== Auth::id()) {
+            return response()->json(['error' => 'Acesso não autorizado'], 403);
+        }
+
+        // 2. Validação
+        $validated = $request->validate([
+            'professional_conduct' => 'required|string|min:5',
+        ]);
+
+        // 3. Atualiza o banco
+        $analysis->update([
+            'professional_conduct' => $validated['professional_conduct'],
+            'final_diagnosis' => $analysis->ai_summary_diagnosis, // Confirma o diagnóstico da IA como final (ou você poderia permitir editar isso também)
+            'status' => 'concluido' // Marca como finalizado
+        ]);
+
+        return response()->json([
+            'message' => 'Laudo salvo com sucesso!',
+            'analysis' => $analysis
+        ]);
+    }
+    public function destroy($id)
+    {
+        // 1. Busca a análise com as imagens
+        $analysis = Analysis::with('images')->findOrFail($id);
+
+        // 2. Autorização: Só o dono ou admin pode deletar
+        $user = Auth::user();
+        if ($user->id !== $analysis->professional_id && $user->role !== 'admin') {
+            return response()->json(['error' => 'Acesso não autorizado'], 403);
+        }
+
+        // 3. Apaga as imagens do Supabase Storage (S3)
+        foreach ($analysis->images as $image) {
+            // Verifica se o arquivo existe antes de tentar apagar
+            if (Storage::disk('s3')->exists($image->file_path)) {
+                Storage::disk('s3')->delete($image->file_path);
+            }
+        }
+
+        // 4. Apaga o registro do banco de dados
+        // (O 'onDelete cascade' do banco vai apagar as linhas de 'analysis_images' automaticamente,
+        // mas o $analysis->delete() resolve isso via Eloquent também)
+        $analysis->delete();
+
+        return response()->json(['message' => 'Análise excluída com sucesso!']);
     }
 }
