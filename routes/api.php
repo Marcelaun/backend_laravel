@@ -69,7 +69,7 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
 
 
 // --- ROTAS PROTEGIDAS (auth:sanctum) ---
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', 'verified')->group(function () {
 
     Route::get('/user', function (Request $request) {
         return $request->user()->load('professional');
