@@ -38,7 +38,7 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
                 ->middleware('guest')
                 ->name('password.email');
 
-    Route::post('/login-token', function (Request $request) {
+   Route::post('/login-token', function (Request $request) {
     $credentials = $request->validate([
         'email' => 'required|email',
         'password' => 'required',
@@ -50,17 +50,23 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
 
     $user = Auth::user();
 
-    // Remove tokens antigos do usuário
+    // Remove tokens antigos (Boa prática de segurança)
     $user->tokens()->delete();
 
     // Cria novo token
-    $token = $user->createToken('insomnia-api')->plainTextToken;
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    // *** AQUI ESTÁ A MUDANÇA IMPORTANTE ***
+    // Carrega os dados extras (CRM, CPF, etc.) antes de enviar para o React
+    $user->load('professional');
 
     return response()->json([
         'token' => $token,
         'user' => $user,
     ]);
 });
+
+
 
 // --- ROTAS PROTEGIDAS (auth:sanctum) ---
 Route::middleware('auth:sanctum')->group(function () {
