@@ -1,5 +1,6 @@
 # --- STAGE 1: BUILD ---
 FROM composer:2.7 AS vendor
+
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --optimize-autoloader --prefer-dist
@@ -20,6 +21,13 @@ RUN apk add --no-cache \
 
 # Instala extensões PHP
 RUN docker-php-ext-install pdo_pgsql mbstring zip gd opcache
+
+# --- A CORREÇÃO ESTÁ AQUI ---
+# Criamos o arquivo de configuração NO AMBIENTE FINAL
+# Aumenta limite de upload para 64MB (seguro para imagens de retina)
+RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini
+# ----------------------------
 
 # Configura diretório de trabalho
 WORKDIR /var/www/html
