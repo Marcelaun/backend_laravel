@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000'), 'http://localhost:5173', 'https://visus-ai-frontend.vercel.app', 'https://visus-ai-frontend.vercel.app/'],
+    'allowed_origins' => [env('FRONTEND_URL', 'https://visus-ai-frontend.vercel.app'), 'http://localhost:5173', 'https://visus-ai-frontend.vercel.app', 'https://visus-ai-frontend.vercel.app/'],
 
     'allowed_origins_patterns' => [],
 
