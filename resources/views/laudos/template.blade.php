@@ -25,6 +25,8 @@
 <body>
 
     <div class="header">
+        <img src="{{ public_path('assets/Logo.png') }}" alt="Logo VisusAI" style="height: 60px; margin-bottom: 10px;">
+
         <h1>Plataforma VisusAI</h1>
         <p>Laudo de Triagem de Retinopatia Diabética</p>
     </div>

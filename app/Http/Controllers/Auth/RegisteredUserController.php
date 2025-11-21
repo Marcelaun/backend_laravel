@@ -47,7 +47,11 @@ class RegisteredUserController extends Controller
             'telefone' => $request->telefone,
         ]);
 
-        event(new Registered($user));
+        try {
+            event(new Registered($user));
+        } catch (\Exception $e) {
+            \Log::error('Falha ao enviar e-mail de verificação: ' . $e->getMessage());
+        }
 
         Auth::login($user);
 
