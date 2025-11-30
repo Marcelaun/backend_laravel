@@ -242,6 +242,15 @@ bash
 cloudflared tunnel --protocol http2 --url http://localhost:8080
 ```
 
+**Solução de Problemas Comuns!!!**
+* **Erro 500 ao abrir o site: Rode sudo docker compose exec app chmod -R 777 storage.**
+
+* **Erro "Network Unreachable" (Banco de Dados): Verifique se a seção dns: [8.8.8.8] está no docker-compose.yml.**
+
+* **Erro "Composer not found": O Dockerfile multi-stage já resolve isso. Se persistir, rode docker compose build --no-cache.**
+
+* **Container Reiniciando (Loop): Provavelmente erro no start.sh. Verifique se ele foi salvo como LF (Unix) e não CRLF (Windows).**
+
 ---
 **🔗 Links Relacionados:**
 * [Frontend (React)](LINK_DO_SEU_REPO_FRONTEND)
