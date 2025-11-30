@@ -7,6 +7,15 @@
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
 <style>
+    /* Força o modo claro no Outlook */
+    :root {
+        color-scheme: light;
+        supported-color-schemes: light;
+    }
+</style>
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<style>
 @media only screen and (max-width: 600px) {
 .inner-body {
 width: 100% !important;

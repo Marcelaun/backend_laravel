@@ -1,59 +1,45 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# VisusAI - Backend & API Gateway (Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 
-## About Laravel
+Este repositório contém o **Backend** da plataforma VisusAI. Ele atua como um API Gateway e orquestrador, gerenciando autenticação, dados de pacientes e comunicação com o serviço de Inteligência Artificial.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🏗️ Arquitetura de Infraestrutura (Edge Computing)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Diferente de deploys tradicionais em nuvem, este backend foi projetado para rodar em **Hardware On-Premise de baixo custo** (Edge Computing), utilizando uma arquitetura containerizada eficiente:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* **Servidor:** TV Box adaptada (Rockchip RK3328, Cortex-A53, 4GB RAM) rodando Linux (Armbian).
+* **Containerização:** Docker & Docker Compose otimizados para arquitetura ARM64.
+* **Exposição:** Cloudflare Tunnel (HTTP2) para acesso seguro externo sem abrir portas no roteador.
+* **Armazenamento:** Integração com Supabase (PostgreSQL para dados e S3 Bucket para imagens de exames).
 
-## Learning Laravel
+## 🚀 Funcionalidades
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+* **Gestão de Usuários:** Autenticação via Token (Sanctum) para médicos e acesso simplificado (CPF) para pacientes.
+* **Processamento de Exames:** Upload multipart de imagens de retina de alta resolução (64MB+).
+* **Orquestração de IA:** Envio assíncrono de imagens para o microsserviço de inferência (Python).
+* **Geração de Laudos:** Criação dinâmica de PDFs com resultados e gráficos de probabilidade.
+* **Segurança:** Validação rigorosa de dados e controle de acesso (ACL) para Admins e Profissionais.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Como Rodar (Docker)
 
-## Laravel Sponsors
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/seu-usuario/visus-backend.git](https://github.com/seu-usuario/visus-backend.git)
+    ```
+2.  **Configure o ambiente:**
+    ```bash
+    cp .env.example .env
+    # Preencha as credenciais do Supabase, Gmail SMTP e URL da IA
+    ```
+3.  **Suba os containers:**
+    ```bash
+    docker-compose up -d --build
+    ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+**🔗 Links Relacionados:**
+* [Frontend (React)](LINK_DO_SEU_REPO_FRONTEND)
+* [IA Service (Hugging Face)](LINK_DO_SEU_SPACE)
