@@ -10,7 +10,7 @@ Este repositório contém o **Backend** da plataforma VisusAI. Ele atua como um 
 
 Diferente de deploys tradicionais em nuvem, este backend foi projetado para rodar em **Hardware On-Premise de baixo custo** (Edge Computing), utilizando uma arquitetura containerizada eficiente:
 
-* **Servidor:** TV Box adaptada (Rockchip RK3328, Cortex-A53, 4GB RAM) rodando Linux (Armbian).
+* **Servidor:** TV Box adaptada (MX-10 Mini) (Rockchip RK3328, Cortex-A53, 4GB RAM) rodando Linux (Armbian).
 * **Containerização:** Docker & Docker Compose otimizados para arquitetura ARM64.
 * **Exposição:** Cloudflare Tunnel (HTTP2) para acesso seguro externo sem abrir portas no roteador.
 * **Armazenamento:** Integração com Supabase (PostgreSQL para dados e S3 Bucket para imagens de exames).
