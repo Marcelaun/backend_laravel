@@ -42,6 +42,9 @@ Diferente de deploys tradicionais em nuvem, este backend foi projetado para roda
 ## 🐳 Guia de Deploy: Edge Computing (TV Box / ARM64)
 Este backend foi otimizado para rodar em hardware de baixo custo (TV Box RK3328 com Armbian Linux), substituindo a necessidade de servidores cloud caros.
 
+<img width="635" height="469" alt="image" src="https://github.com/user-attachments/assets/8f10c736-aa79-49b6-8c47-f3f964a3536d" />
+
+
 Como o repositório contém o código padrão do Laravel, siga os passos abaixo para configurar o ambiente Docker otimizado para processadores ARM.
 
 1. **Pré-requisitos no Hardware**
