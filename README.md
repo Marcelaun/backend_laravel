@@ -253,5 +253,5 @@ cloudflared tunnel --protocol http2 --url http://localhost:8080
 
 ---
 **🔗 Links Relacionados:**
-* [Frontend (React)](LINK_DO_SEU_REPO_FRONTEND)
-* [IA Service (Hugging Face)](LINK_DO_SEU_SPACE)
+* [Frontend (React)](https://github.com/Marcelaun/visus-ai-frontend)
+* [IA Service (Hugging Face)](https://github.com/Marcelaun/visus-ai-model)
